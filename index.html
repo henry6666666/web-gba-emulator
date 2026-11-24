@@ -6,57 +6,55 @@
   <title>GBA 网页模拟器 | Web GBA Emulator</title>
   <meta name="description" content="在浏览器中运行 Game Boy Advance 游戏。支持键盘和触控操作。请使用自己合法拥有的 ROM。">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       color: #e0e0e0;
+    }
+    body {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding: 16px;
+      padding: 12px;
     }
     header {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       max-width: 800px;
+      width: 100%;
     }
     h1 {
-      font-size: 1.8rem;
-      margin-bottom: 8px;
+      font-size: 1.6rem;
+      margin-bottom: 6px;
       color: #00d9ff;
       text-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
     }
     .subtitle {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       opacity: 0.85;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .controls-info {
       background: rgba(255, 255, 255, 0.08);
       border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 0.85rem;
+      padding: 10px 14px;
+      font-size: 0.8rem;
       line-height: 1.5;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       max-width: 640px;
+      width: 100%;
     }
-    .controls-info strong {
-      color: #00d9ff;
-    }
+    .controls-info strong { color: #00d9ff; }
     .load-area {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
       justify-content: center;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
     .file-label {
       display: inline-flex;
@@ -65,26 +63,24 @@
       background: #00d9ff;
       color: #0f3460;
       font-weight: 600;
-      padding: 12px 24px;
+      padding: 12px 22px;
       border-radius: 50px;
       cursor: pointer;
       transition: transform 0.15s, box-shadow 0.15s;
       box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3);
+      user-select: none;
     }
     .file-label:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0, 217, 255, 0.4);
     }
-    .file-label:active {
-      transform: translateY(0);
-    }
-    #romInput {
-      display: none;
-    }
-    #game-container {
+    #romInput { display: none; }
+    /* 关键：给 EmulatorJS 明确的宽高，避免黑屏 */
+    #display {
       width: 100%;
       max-width: 640px;
-      aspect-ratio: 3 / 2;
+      height: 480px;
+      max-height: 70vh;
       background: #000;
       border-radius: 12px;
       overflow: hidden;
@@ -104,37 +100,37 @@
       justify-content: center;
       background: #111;
       color: #888;
-      font-size: 1rem;
+      font-size: 0.95rem;
       text-align: center;
       padding: 20px;
-      z-index: 1;
+      z-index: 10;
     }
-    .placeholder.hidden {
-      display: none;
-    }
+    .placeholder.hidden { display: none; }
     .placeholder svg {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
+      width: 56px;
+      height: 56px;
+      margin-bottom: 12px;
       opacity: 0.5;
     }
+    .status {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: #00d9ff;
+      min-height: 1.2em;
+    }
     footer {
-      margin-top: 24px;
-      font-size: 0.8rem;
+      margin-top: 16px;
+      font-size: 0.75rem;
       opacity: 0.7;
       text-align: center;
       max-width: 600px;
     }
-    footer a {
-      color: #00d9ff;
-      text-decoration: none;
-    }
-    footer a:hover {
-      text-decoration: underline;
-    }
+    footer a { color: #00d9ff; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
     @media (max-width: 480px) {
-      h1 { font-size: 1.4rem; }
-      .controls-info { font-size: 0.8rem; }
+      h1 { font-size: 1.3rem; }
+      #display { height: 360px; }
+      .controls-info { font-size: 0.75rem; }
     }
   </style>
 </head>
@@ -151,20 +147,20 @@
   </header>
 
   <div class="load-area">
-    <label class="file-label" for="romInput">
-      📂 选择 GBA ROM 文件
-    </label>
-    <input type="file" id="romInput" accept=".gba,.zip,.7z,.rar">
+    <label class="file-label" for="romInput">📂 选择 GBA ROM 文件</label>
+    <input type="file" id="romInput" accept=".gba,.zip,.7z,.rar,application/octet-stream">
   </div>
 
-  <div id="game-container">
+  <div id="display">
     <div id="placeholder" class="placeholder">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
       <div>请选择一个 .gba 文件开始游戏</div>
-      <div style="font-size:0.85rem;margin-top:8px;opacity:0.7">支持 .gba / .zip 格式<br>所有操作在本地完成，不会上传任何文件</div>
+      <div style="font-size:0.8rem;margin-top:8px;opacity:0.7">支持 .gba / .zip 格式<br>所有操作在本地完成，不会上传任何文件</div>
     </div>
     <div id="game"></div>
   </div>
+
+  <div class="status" id="status"></div>
 
   <footer>
     基于 <a href="https://emulatorjs.org" target="_blank" rel="noopener">EmulatorJS</a> (mGBA 核心) 构建<br>
@@ -175,42 +171,62 @@
   <script>
     const romInput = document.getElementById('romInput');
     const placeholder = document.getElementById('placeholder');
-    let emulatorStarted = false;
+    const statusEl = document.getElementById('status');
+    let started = false;
+
+    function setStatus(msg) {
+      statusEl.textContent = msg || '';
+    }
 
     romInput.addEventListener('change', function (e) {
-      const file = e.target.files[0];
+      const file = e.target.files && e.target.files[0];
       if (!file) return;
 
-      // Hide placeholder
-      placeholder.classList.add('hidden');
-
-      // Create object URL for the local file
-      const gameUrl = URL.createObjectURL(file);
-
-      // Clean up previous instance if any
-      if (emulatorStarted) {
-        // Reload the page to reset EmulatorJS cleanly
+      // 已经启动过就整页刷新，避免 EmulatorJS 状态残留
+      if (started) {
         location.reload();
         return;
       }
 
-      // Configure EmulatorJS
+      placeholder.classList.add('hidden');
+      setStatus('正在加载模拟器与 ROM…');
+
+      // 用带正确扩展名的 Blob URL，提高兼容性
+      const ext = (file.name.split('.').pop() || 'gba').toLowerCase();
+      const blob = file.slice(0, file.size, file.type || 'application/octet-stream');
+      const gameUrl = URL.createObjectURL(blob);
+
+      // 配置 EmulatorJS（与官方 demo 一致）
       window.EJS_player = '#game';
-      window.EJS_core = 'gba';
+      window.EJS_core = 'gba';           // 使用 GBA 核心
       window.EJS_gameUrl = gameUrl;
+      window.EJS_gameName = file.name.replace(/\.(gba|zip|7z|rar)$/i, '');
       window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-      window.EJS_gameName = file.name.replace(/\.gba$/i, '');
       window.EJS_startOnLoaded = true;
-      // Enable virtual gamepad for mobile
-      window.EJS_VirtualGamepadSettings = {
-        // default is good, EmulatorJS handles touch well
+      window.EJS_color = '#00d9ff';
+      // 可选：关闭退出确认
+      window.EJS_askBeforeExit = false;
+
+      // 加载完成后的回调
+      window.EJS_ready = function () {
+        setStatus('加载完成，开始游戏');
+        setTimeout(() => setStatus(''), 2000);
       };
 
-      // Load the emulator
+      // 出错时提示
+      window.EJS_onGameStart = function () {
+        setStatus('');
+      };
+
       const script = document.createElement('script');
       script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-      script.onload = () => {
-        emulatorStarted = true;
+      script.onerror = function () {
+        setStatus('模拟器脚本加载失败，请检查网络后刷新重试');
+        placeholder.classList.remove('hidden');
+      };
+      script.onload = function () {
+        started = true;
+        setStatus('模拟器已加载，正在启动 ROM…');
       };
       document.body.appendChild(script);
     });
