@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>GBA 网页模拟器 | Web GBA Emulator</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,7 +16,8 @@
     }
     body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 12px; }
     header { text-align: center; margin-bottom: 10px; max-width: 800px; width: 100%; }
-    h1 { font-size: 1.5rem; margin-bottom: 6px; color: #00d9ff; }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; color: #00d9ff; }
+    .ver { font-size: 0.7rem; opacity: 0.55; margin-bottom: 8px; }
     .subtitle { font-size: 0.85rem; opacity: 0.85; margin-bottom: 10px; }
     .panel { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 14px; font-size: 0.8rem; line-height: 1.5; margin-bottom: 10px; max-width: 640px; width: 100%; text-align: left; }
     .panel strong { color: #00d9ff; }
@@ -31,21 +33,36 @@
     .file-label, .btn { display: inline-flex; align-items: center; gap: 8px; background: #00d9ff; color: #0f3460; font-weight: 600; padding: 12px 20px; border-radius: 50px; cursor: pointer; border: none; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3); }
     .btn-secondary { background: rgba(255,255,255,0.15); color: #e0e0e0; box-shadow: none; }
     #romInput { display: none; }
-    #display { width: 100%; max-width: 720px; height: 480px; max-height: 58vh; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: relative; outline: none; }
+    #display {
+      width: 100%; max-width: 720px; height: 480px; max-height: 58vh;
+      background: #000; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: relative; outline: none;
+    }
     #display:focus, #display:focus-within { box-shadow: 0 0 0 2px #00d9ff, 0 10px 40px rgba(0,0,0,0.5); }
     #game { width: 100%; height: 100%; }
-    #kb-capture { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0.01; border: none; z-index: 5; color: transparent; background: transparent; }
-    .placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; color: #888; text-align: center; padding: 20px; z-index: 10; }
+    #kb-capture {
+      position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0.01;
+      border: none; z-index: 5; color: transparent; background: transparent;
+    }
+    .placeholder {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; background: #111; color: #888;
+      text-align: center; padding: 20px; z-index: 10;
+    }
     .placeholder.hidden { display: none; }
-    .status { margin-top: 10px; font-size: 0.85rem; color: #00d9ff; min-height: 1.2em; text-align: center; }
+    .status { margin-top: 10px; font-size: 0.85rem; color: #00d9ff; min-height: 1.2em; text-align: center; max-width: 640px; }
     footer { margin-top: 14px; font-size: 0.75rem; opacity: 0.7; text-align: center; max-width: 600px; }
     footer a { color: #00d9ff; text-decoration: none; }
-    @media (max-width: 768px) { h1 { font-size: 1.25rem; } #display { height: 340px; max-height: 48vh; } }
+    @media (max-width: 768px) {
+      h1 { font-size: 1.25rem; }
+      #display { height: 340px; max-height: 48vh; }
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>GBA 网页模拟器</h1>
+    <div class="ver">页面版本 v2.2 · 若看不到此版本请强制刷新</div>
     <p class="subtitle">单人 · 本机双人 · 局域网联机</p>
     <div class="panel">
       <strong>游玩模式</strong>
@@ -58,15 +75,17 @@
       <div class="netplay-fields" id="netplayFields">
         <input id="netplayUrl" type="text" placeholder="信令服务器 例如 http://192.168.1.8:3000" value="http://127.0.0.1:3000">
       </div>
-      <div class="hint">本机双人 = 同一台设备两套键/两手柄。真正通信缆核心 CDN 已下架。</div>
-      <div class="hint hint-ok">iPad 外接键盘：先点「启用外接键盘」，再点画面。</div>
+      <div class="hint">建议先用「单人」测试。本机双人 = 两套键/两手柄，不是通信缆。</div>
+      <div class="hint hint-ok">iPad：先点「启用外接键盘」，再点游戏画面。</div>
     </div>
   </header>
+
   <div class="load-area">
     <label class="file-label" for="romInput">选择 GBA ROM</label>
-    <input type="file" id="romInput" accept=".gba,.zip,.7z,.rar,application/octet-stream">
+    <input type="file" id="romInput" accept=".gba,.zip,.7z,application/octet-stream">
     <button type="button" class="btn btn-secondary" id="enableKbBtn" style="display:none">启用外接键盘</button>
   </div>
+
   <div id="display" tabindex="0">
     <input id="kb-capture" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="none" readonly tabindex="0">
     <div id="placeholder" class="placeholder">
@@ -76,11 +95,13 @@
     <div id="game"></div>
   </div>
   <div class="status" id="status"></div>
+
   <footer>
     基于 <a href="https://emulatorjs.org" target="_blank" rel="noopener">EmulatorJS</a><br>
     联机说明见仓库 netplay-server/README.md<br>
     <a href="https://github.com/henry6666666/web-gba-emulator" target="_blank">GitHub</a>
   </footer>
+
   <script>
     const romInput = document.getElementById('romInput');
     const placeholder = document.getElementById('placeholder');
@@ -93,16 +114,21 @@
     const modeHelp = document.getElementById('modeHelp');
     let started = false;
     let playMode = 'single';
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    let loadTimer = null;
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (isIOS) enableKbBtn.style.display = 'inline-flex';
+
     const helpText = {
       single: '普通单机。Z=A，X=B，方向键移动，Enter=Start，V=Select，Q/E=L/R。',
-      dual: '本机双人：同一模拟器内 P1+P2 两套键（或两只手柄）。P1=方向键+Z/X，P2=T/F/G/H+J/K。注意：多数 GBA 联机依赖通信缆，网页 CDN 已无 dual 核心，此模式适合「支持双人同机」的游戏。',
-      netplay: '局域网联机：电脑运行 netplay-server，双方填同一服务器，加载同一 ROM。主机开房，客人加入。'
+      dual: '本机双人：P1=方向键+Z/X，P2=T/F/G/H+J/K（或两只手柄）。不是通信缆双机。',
+      netplay: '局域网联机：电脑运行 netplay-server，双方填同一服务器，加载同一 ROM。'
     };
+
     document.querySelectorAll('.mode-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        if (started) { setStatus('已开始游戏后不能切换模式，请刷新页面'); return; }
+        if (started) { setStatus('已开始后不能切换模式，请刷新页面'); return; }
         document.querySelectorAll('.mode-btn').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
         playMode = btn.getAttribute('data-mode');
@@ -110,36 +136,62 @@
         netplayFields.classList.toggle('show', playMode === 'netplay');
       });
     });
+
     function setStatus(msg) { statusEl.textContent = msg || ''; }
+
     function focusKeyboardCapture() {
       try {
         kbCapture.removeAttribute('readonly');
         kbCapture.focus({ preventScroll: true });
-        setTimeout(function () { kbCapture.setAttribute('readonly', 'readonly'); kbCapture.value = ''; }, 50);
+        setTimeout(function () {
+          kbCapture.setAttribute('readonly', 'readonly');
+          kbCapture.value = '';
+        }, 50);
       } catch (e) {}
-      display.focus({ preventScroll: true });
+      try { display.focus({ preventScroll: true }); } catch (e) {}
     }
-    enableKbBtn.addEventListener('click', function () { focusKeyboardCapture(); setStatus('外接键盘已启用 — 请点一下游戏画面后再按键'); });
+
+    enableKbBtn.addEventListener('click', function () {
+      focusKeyboardCapture();
+      setStatus('外接键盘已启用 — 请再点一下游戏画面后按键');
+    });
     display.addEventListener('pointerdown', function () { focusKeyboardCapture(); }, { passive: true });
+
     window.addEventListener('keydown', function (e) {
-      const block = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Spacebar','UIKeyInputUpArrow','UIKeyInputDownArrow','UIKeyInputLeftArrow','UIKeyInputRightArrow'];
-      if (block.includes(e.key)) e.preventDefault();
+      var block = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Spacebar',
+        'UIKeyInputUpArrow','UIKeyInputDownArrow','UIKeyInputLeftArrow','UIKeyInputRightArrow'];
+      if (block.indexOf(e.key) !== -1) e.preventDefault();
       if (document.activeElement === kbCapture) kbCapture.value = '';
     }, { passive: false });
+
     function hashId(str) {
       var h = 0;
       for (var i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
       return Math.abs(h) || 1;
     }
+
     romInput.addEventListener('change', function (e) {
       var file = e.target.files && e.target.files[0];
       if (!file) return;
       if (started) { location.reload(); return; }
+
+      // 建议先用单人
+      if (playMode !== 'single' && playMode !== 'dual' && playMode !== 'netplay') {
+        playMode = 'single';
+      }
+
+      setStatus('准备加载：' + file.name + '（' + Math.round(file.size / 1024) + ' KB）');
       placeholder.classList.add('hidden');
-      setStatus('正在加载模拟器与 ROM…');
-      var blob = file.slice(0, file.size, file.type || 'application/octet-stream');
-      var gameUrl = URL.createObjectURL(blob);
+
+      // 直接用 File，不要 slice（避免部分浏览器异常）
+      var gameUrl = URL.createObjectURL(file);
       var gameName = file.name.replace(/\.(gba|zip|7z|rar)$/i, '');
+
+      // 清空残留
+      var gameEl = document.getElementById('game');
+      gameEl.innerHTML = '';
+
+      // —— EmulatorJS 配置（全部在加载脚本前设好）——
       window.EJS_player = '#game';
       window.EJS_core = 'gba';
       window.EJS_gameUrl = gameUrl;
@@ -148,73 +200,100 @@
       window.EJS_startOnLoaded = true;
       window.EJS_color = '#00d9ff';
       window.EJS_askBeforeExit = false;
+      window.EJS_threads = false; // GitHub Pages 无 COOP/COEP，必须关线程
+      window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
 
       if (playMode === 'netplay') {
-        window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
         var server = (netplayUrlInput.value || '').trim().replace(/\/$/, '');
         if (!server) {
-          setStatus('请填写局域网信令服务器地址，例如 http://192.168.1.8:3000');
+          setStatus('请填写局域网信令服务器地址');
           placeholder.classList.remove('hidden');
           return;
         }
+        window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
         window.EJS_netplayServer = server;
         window.EJS_netplayUrl = server;
         window.EJS_netplayICEServers = [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' }
         ];
-      } else {
-        // 单人 / 本机双人都用官方 CDN 存在的 gba(mgba) 核心
-        window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
       }
 
       window.EJS_defaultControls = {
         0: {
-          0: { value: 'x', value2: 'BUTTON_2' }, 1: { value: 's', value2: 'BUTTON_4' },
-          2: { value: 'v', value2: 'SELECT' }, 3: { value: 'enter', value2: 'START' },
-          4: { value: 'up arrow', value2: 'DPAD_UP' }, 5: { value: 'down arrow', value2: 'DPAD_DOWN' },
-          6: { value: 'left arrow', value2: 'DPAD_LEFT' }, 7: { value: 'right arrow', value2: 'DPAD_RIGHT' },
-          8: { value: 'z', value2: 'BUTTON_1' }, 9: { value: 'a', value2: 'BUTTON_3' },
-          10: { value: 'q', value2: 'LEFT_TOP_SHOULDER' }, 11: { value: 'e', value2: 'RIGHT_TOP_SHOULDER' }
+          0: { value: 'x', value2: 'BUTTON_2' },
+          1: { value: 's', value2: 'BUTTON_4' },
+          2: { value: 'v', value2: 'SELECT' },
+          3: { value: 'enter', value2: 'START' },
+          4: { value: 'up arrow', value2: 'DPAD_UP' },
+          5: { value: 'down arrow', value2: 'DPAD_DOWN' },
+          6: { value: 'left arrow', value2: 'DPAD_LEFT' },
+          7: { value: 'right arrow', value2: 'DPAD_RIGHT' },
+          8: { value: 'z', value2: 'BUTTON_1' },
+          9: { value: 'a', value2: 'BUTTON_3' },
+          10: { value: 'q', value2: 'LEFT_TOP_SHOULDER' },
+          11: { value: 'e', value2: 'RIGHT_TOP_SHOULDER' }
         },
         1: {
-          0: { value: 'k', value2: 'BUTTON_2' }, 2: { value: 'b', value2: 'SELECT' },
-          3: { value: 'n', value2: 'START' }, 4: { value: 't', value2: 'DPAD_UP' },
-          5: { value: 'g', value2: 'DPAD_DOWN' }, 6: { value: 'f', value2: 'DPAD_LEFT' },
-          7: { value: 'h', value2: 'DPAD_RIGHT' }, 8: { value: 'j', value2: 'BUTTON_1' },
-          10: { value: 'u', value2: 'LEFT_TOP_SHOULDER' }, 11: { value: 'o', value2: 'RIGHT_TOP_SHOULDER' }
+          0: { value: 'k', value2: 'BUTTON_2' },
+          2: { value: 'b', value2: 'SELECT' },
+          3: { value: 'n', value2: 'START' },
+          4: { value: 't', value2: 'DPAD_UP' },
+          5: { value: 'g', value2: 'DPAD_DOWN' },
+          6: { value: 'f', value2: 'DPAD_LEFT' },
+          7: { value: 'h', value2: 'DPAD_RIGHT' },
+          8: { value: 'j', value2: 'BUTTON_1' },
+          10: { value: 'u', value2: 'LEFT_TOP_SHOULDER' },
+          11: { value: 'o', value2: 'RIGHT_TOP_SHOULDER' }
         },
-        2: {}, 3: {}
+        2: {},
+        3: {}
       };
 
       window.EJS_ready = function () {
-        if (playMode === 'netplay') setStatus('已加载。点模拟器工具栏地球图标创建/加入房间');
-        else if (playMode === 'dual') setStatus('本机双人：P1 方向键+Z/X，P2 T/F/G/H+J/K（或接两只手柄）');
-        else if (isIOS) setStatus('加载完成。iPad：启用外接键盘或使用虚拟手柄');
-        else setStatus('加载完成！请点击游戏画面后再用键盘');
-        setTimeout(focusKeyboardCapture, 400);
+        if (loadTimer) { clearTimeout(loadTimer); loadTimer = null; }
+        if (playMode === 'netplay') {
+          setStatus('已加载。点模拟器工具栏「地球」图标创建/加入房间');
+        } else if (playMode === 'dual') {
+          setStatus('已启动。P1: 方向键+Z/X · P2: TFGH+JK');
+        } else if (isIOS) {
+          setStatus('加载完成。请点「启用外接键盘」或使用虚拟手柄');
+        } else {
+          setStatus('加载完成！请先点击游戏画面，再用键盘');
+        }
+        setTimeout(focusKeyboardCapture, 300);
       };
-      window.EJS_onGameStart = function () { setTimeout(focusKeyboardCapture, 200); };
 
-      var loaderBase = playMode === 'netplay'
+      window.EJS_onGameStart = function () {
+        if (loadTimer) { clearTimeout(loadTimer); loadTimer = null; }
+        setTimeout(focusKeyboardCapture, 200);
+      };
+
+      // 60 秒超时提示
+      loadTimer = setTimeout(function () {
+        setStatus('加载超时。请：①强制刷新 ②选「单人」模式 ③换一个 .gba（不要太大 zip） ④检查是否能打开 cdn.emulatorjs.org');
+        placeholder.classList.remove('hidden');
+        placeholder.innerHTML = '<div style="color:#ff6b6b">加载超时或失败</div><div style="margin-top:8px;font-size:0.85rem">强制刷新后用「单人」模式重试</div>';
+      }, 60000);
+
+      var loaderSrc = playMode === 'netplay'
         ? 'https://cdn.emulatorjs.org/latest/data/loader.js'
         : 'https://cdn.emulatorjs.org/stable/data/loader.js';
+
+      setStatus('正在下载模拟器核心（约 1MB）…');
       var script = document.createElement('script');
-      script.src = loaderBase;
+      script.src = loaderSrc;
+      script.async = true;
       script.onerror = function () {
-        if (playMode === 'netplay') {
-          window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-          var s2 = document.createElement('script');
-          s2.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-          s2.onerror = function () { setStatus('模拟器脚本加载失败'); placeholder.classList.remove('hidden'); };
-          s2.onload = function () { started = true; setStatus('模拟器已加载（stable）…'); };
-          document.body.appendChild(s2);
-        } else {
-          setStatus('模拟器脚本加载失败，请检查网络');
-          placeholder.classList.remove('hidden');
-        }
+        if (loadTimer) clearTimeout(loadTimer);
+        setStatus('无法加载 EmulatorJS CDN，请检查网络或代理');
+        placeholder.classList.remove('hidden');
+        placeholder.innerHTML = '<div style="color:#ff6b6b">CDN 加载失败</div><div style="margin-top:8px">cdn.emulatorjs.org 无法访问</div>';
       };
-      script.onload = function () { started = true; setStatus('模拟器已加载，正在启动 ROM…'); };
+      script.onload = function () {
+        started = true;
+        setStatus('模拟器脚本已加载，正在解压/启动 ROM…');
+      };
       document.body.appendChild(script);
     });
   </script>
