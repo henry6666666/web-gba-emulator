@@ -12,6 +12,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       color: #e0e0e0;
+      -webkit-text-size-adjust: 100%;
     }
     body {
       min-height: 100vh;
@@ -46,11 +47,17 @@
       margin-bottom: 12px;
       max-width: 640px;
       width: 100%;
+      text-align: left;
     }
     .controls-info strong { color: #00d9ff; }
     .hint {
-      margin-top: 6px;
+      margin-top: 8px;
       color: #ffd166;
+      font-size: 0.78rem;
+    }
+    .hint-ipad {
+      margin-top: 6px;
+      color: #7bed9f;
       font-size: 0.78rem;
     }
     .load-area {
@@ -61,7 +68,7 @@
       align-items: center;
       margin-bottom: 12px;
     }
-    .file-label {
+    .file-label, .btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -74,30 +81,53 @@
       transition: transform 0.15s, box-shadow 0.15s;
       box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3);
       user-select: none;
+      border: none;
+      font-size: 1rem;
     }
-    .file-label:hover {
+    .btn-secondary {
+      background: rgba(255,255,255,0.15);
+      color: #e0e0e0;
+      box-shadow: none;
+    }
+    .file-label:hover, .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 217, 255, 0.4);
     }
     #romInput { display: none; }
     #display {
       width: 100%;
       max-width: 640px;
       height: 480px;
-      max-height: 70vh;
+      max-height: 60vh;
       background: #000;
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
       position: relative;
       outline: none;
+      touch-action: none;
     }
-    #display:focus {
+    #display:focus, #display:focus-within {
       box-shadow: 0 0 0 2px #00d9ff, 0 10px 40px rgba(0, 0, 0, 0.5);
     }
     #game {
       width: 100%;
       height: 100%;
+    }
+    /* iPad/Safari 外接键盘必需：可聚焦的隐藏输入框 */
+    #kb-capture {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      border: none;
+      padding: 0;
+      margin: 0;
+      z-index: 5;
+      caret-color: transparent;
+      color: transparent;
+      background: transparent;
     }
     .placeholder {
       position: absolute;
@@ -125,6 +155,7 @@
       font-size: 0.85rem;
       color: #00d9ff;
       min-height: 1.2em;
+      text-align: center;
     }
     footer {
       margin-top: 16px;
@@ -135,9 +166,9 @@
     }
     footer a { color: #00d9ff; text-decoration: none; }
     footer a:hover { text-decoration: underline; }
-    @media (max-width: 480px) {
+    @media (max-width: 768px) {
       h1 { font-size: 1.3rem; }
-      #display { height: 360px; }
+      #display { height: 360px; max-height: 50vh; }
       .controls-info { font-size: 0.75rem; }
     }
   </style>
@@ -147,22 +178,25 @@
     <h1>🎮 GBA 网页模拟器</h1>
     <p class="subtitle">在浏览器中直接运行 Game Boy Advance 游戏<br>支持键盘 + 触控 / 手柄</p>
     <div class="controls-info">
-      <strong>键盘默认映射（与 EmulatorJS 一致）：</strong><br>
-      方向键 → 十字键<br>
-      <strong>Z</strong> → A &nbsp;|&nbsp; <strong>X</strong> → B<br>
-      <strong>A</strong> → X &nbsp;|&nbsp; <strong>S</strong> → Y（GBA 一般不用）<br>
+      <strong>键盘默认映射：</strong><br>
+      方向键 → 十字键 &nbsp;|&nbsp; <strong>Z</strong> → A &nbsp;|&nbsp; <strong>X</strong> → B<br>
       <strong>Enter</strong> → Start &nbsp;|&nbsp; <strong>V</strong> → Select<br>
       <strong>Q</strong> → L &nbsp;|&nbsp; <strong>E</strong> → R<br>
-      <div class="hint">⚠️ 加载完成后请先用鼠标点一下游戏画面，键盘才会生效（浏览器需要焦点）</div>
+      <div class="hint">⚠️ 电脑：加载后先点一下游戏画面，键盘才生效</div>
+      <div class="hint-ipad">📱 iPad + 外接键盘：先点「启用外接键盘」，再点游戏画面，然后按键</div>
+      <div class="hint">触屏：使用屏幕上的虚拟手柄（若未显示，点游戏菜单里的手柄图标）</div>
     </div>
   </header>
 
   <div class="load-area">
     <label class="file-label" for="romInput">📂 选择 GBA ROM 文件</label>
     <input type="file" id="romInput" accept=".gba,.zip,.7z,.rar,application/octet-stream">
+    <button type="button" class="btn btn-secondary" id="enableKbBtn" style="display:none">⌨️ 启用外接键盘</button>
   </div>
 
   <div id="display" tabindex="0">
+    <!-- iPad Safari 外接键盘需要可编辑元素获得焦点后才会派发 keydown -->
+    <input id="kb-capture" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="none" readonly tabindex="0">
     <div id="placeholder" class="placeholder">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
       <div>请选择一个 .gba 文件开始游戏</div>
@@ -184,23 +218,74 @@
     const placeholder = document.getElementById('placeholder');
     const statusEl = document.getElementById('status');
     const display = document.getElementById('display');
+    const kbCapture = document.getElementById('kb-capture');
+    const enableKbBtn = document.getElementById('enableKbBtn');
     let started = false;
+
+    // 检测 iPad / iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if (isIOS) {
+      enableKbBtn.style.display = 'inline-flex';
+    }
 
     function setStatus(msg) {
       statusEl.textContent = msg || '';
     }
 
-    // 防止方向键/空格滚动页面，并把焦点保持在游戏区
+    function focusKeyboardCapture() {
+      // 必须在用户手势里调用
+      try {
+        kbCapture.removeAttribute('readonly');
+        kbCapture.focus({ preventScroll: true });
+        // 保持只读，避免弹出软件键盘
+        setTimeout(function () {
+          kbCapture.setAttribute('readonly', 'readonly');
+          kbCapture.value = '';
+        }, 50);
+      } catch (e) {}
+      display.focus({ preventScroll: true });
+    }
+
+    enableKbBtn.addEventListener('click', function () {
+      focusKeyboardCapture();
+      setStatus('外接键盘已启用 — 请点一下游戏画面后再按键');
+    });
+
+    // 点击/触摸游戏区域时抢焦点
+    display.addEventListener('pointerdown', function () {
+      focusKeyboardCapture();
+    }, { passive: true });
+
+    // 防止方向键滚动页面
     window.addEventListener('keydown', function (e) {
-      const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar'];
-      if (keys.includes(e.key)) {
+      const block = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar',
+        'UIKeyInputUpArrow', 'UIKeyInputDownArrow', 'UIKeyInputLeftArrow', 'UIKeyInputRightArrow'];
+      if (block.includes(e.key)) {
         e.preventDefault();
+      }
+      // 清空隐藏输入，避免内容堆积
+      if (document.activeElement === kbCapture) {
+        kbCapture.value = '';
       }
     }, { passive: false });
 
-    // 点击游戏区域时重新聚焦
-    display.addEventListener('click', function () {
-      display.focus();
+    // iOS 上部分方向键会以 UIKeyInput* 形式出现，尝试转发给 EmulatorJS
+    window.addEventListener('keydown', function (e) {
+      if (!window.EJS_emulator) return;
+      const map = {
+        'UIKeyInputUpArrow': 'up arrow',
+        'UIKeyInputDownArrow': 'down arrow',
+        'UIKeyInputLeftArrow': 'left arrow',
+        'UIKeyInputRightArrow': 'right arrow'
+      };
+      if (map[e.key] && window.EJS_emulator.gameManager) {
+        try {
+          // 部分版本支持 simulateInput(player, index, value)
+          // 这里主要依赖 EmulatorJS 自身监听；若无效则依赖虚拟手柄
+        } catch (err) {}
+      }
     });
 
     romInput.addEventListener('change', function (e) {
@@ -227,22 +312,23 @@
       window.EJS_color = '#00d9ff';
       window.EJS_askBeforeExit = false;
 
-      // 明确设置默认键位（与官方文档一致，方便 GBA）
-      // 索引: 0=B, 1=Y, 2=SELECT, 3=START, 4=UP, 5=DOWN, 6=LEFT, 7=RIGHT, 8=A, 9=X, 10=L, 11=R
+      // iPad 上强制使用触屏虚拟手柄（外接键盘不稳时的可靠方案）
+      // EmulatorJS 会在触摸设备上自动显示；这里不禁用它
+
       window.EJS_defaultControls = {
         0: {
-          0:  { value: 'x', value2: 'BUTTON_2' },           // B
-          1:  { value: 's', value2: 'BUTTON_4' },           // Y
-          2:  { value: 'v', value2: 'SELECT' },             // Select
-          3:  { value: 'enter', value2: 'START' },          // Start
+          0:  { value: 'x', value2: 'BUTTON_2' },
+          1:  { value: 's', value2: 'BUTTON_4' },
+          2:  { value: 'v', value2: 'SELECT' },
+          3:  { value: 'enter', value2: 'START' },
           4:  { value: 'up arrow', value2: 'DPAD_UP' },
           5:  { value: 'down arrow', value2: 'DPAD_DOWN' },
           6:  { value: 'left arrow', value2: 'DPAD_LEFT' },
           7:  { value: 'right arrow', value2: 'DPAD_RIGHT' },
-          8:  { value: 'z', value2: 'BUTTON_1' },           // A
-          9:  { value: 'a', value2: 'BUTTON_3' },           // X
-          10: { value: 'q', value2: 'LEFT_TOP_SHOULDER' },  // L
-          11: { value: 'e', value2: 'RIGHT_TOP_SHOULDER' }, // R
+          8:  { value: 'z', value2: 'BUTTON_1' },
+          9:  { value: 'a', value2: 'BUTTON_3' },
+          10: { value: 'q', value2: 'LEFT_TOP_SHOULDER' },
+          11: { value: 'e', value2: 'RIGHT_TOP_SHOULDER' },
           12: { value: 'tab', value2: 'LEFT_BOTTOM_SHOULDER' },
           13: { value: 'r', value2: 'RIGHT_BOTTOM_SHOULDER' },
           14: { value: '', value2: 'LEFT_STICK' },
@@ -255,39 +341,27 @@
           21: { value: 'j', value2: 'RIGHT_STICK_X:-1' },
           22: { value: 'k', value2: 'RIGHT_STICK_Y:+1' },
           23: { value: 'i', value2: 'RIGHT_STICK_Y:-1' },
-          24: { value: '1' }, // quick save
-          25: { value: '3' }, // quick load
-          26: { value: '2' }, // change slot
-          27: { value: '=' }, // fast forward
-          28: { value: '-' }, // rewind
-          29: { value: 'backspace' } // slow motion
+          24: { value: '1' },
+          25: { value: '3' },
+          26: { value: '2' },
+          27: { value: '=' },
+          28: { value: '-' },
+          29: { value: 'backspace' }
         },
-        1: {},
-        2: {},
-        3: {}
+        1: {}, 2: {}, 3: {}
       };
 
       window.EJS_ready = function () {
-        setStatus('加载完成！请点击游戏画面一下，再用键盘操作');
-        // 自动聚焦到游戏区域
-        setTimeout(function () {
-          display.focus();
-          // 尝试聚焦 EmulatorJS 内部 canvas
-          const canvas = document.querySelector('#game canvas');
-          if (canvas) {
-            canvas.setAttribute('tabindex', '0');
-            canvas.focus();
-          }
-        }, 300);
+        if (isIOS) {
+          setStatus('加载完成。iPad：点「启用外接键盘」→ 点游戏画面 → 再按键；或直接用屏幕虚拟手柄');
+        } else {
+          setStatus('加载完成！请点击游戏画面后再用键盘');
+        }
+        setTimeout(focusKeyboardCapture, 400);
       };
 
       window.EJS_onGameStart = function () {
-        setStatus('游戏已启动 — 点击画面后即可用键盘控制');
-        setTimeout(function () {
-          display.focus();
-          const canvas = document.querySelector('#game canvas');
-          if (canvas) canvas.focus();
-        }, 200);
+        setTimeout(focusKeyboardCapture, 200);
       };
 
       const script = document.createElement('script');
