@@ -1,58 +1,38 @@
-# Web GBA Emulator 🎮
+# Web GBA Emulator
 
-一个可以在浏览器中直接运行的 **Game Boy Advance (GBA)** 模拟器。
+浏览器里玩 GBA，支持键盘、触控，以及**本机双人 / 局域网联机**。
 
-支持：
-- ✅ 键盘操作
-- ✅ 手机 / 平板触控操作
-- ✅ 手柄支持
-- ✅ 本地加载 ROM（不会上传任何文件）
-- ✅ 存档 / 即时存档（EmulatorJS 内置）
-- ✅ 全屏模式
+在线页面：打开本仓库的 GitHub Pages。
 
-在线演示：部署到 GitHub Pages 后访问 `https://henry6666666.github.io/web-gba-emulator/`
+## 功能
 
-## 使用方法
+- 本地加载 `.gba` / `.zip`（不上传服务器）
+- 键盘 + 手机触控
+iPad 外接键盘需点「启用外接键盘」
+- **本机双人**：`mgbadual` 核心，同一页面两个 GBA 通信缆联机
+- **局域网联机**：EmulatorJS Netplay（需运行 `netplay-server`）
 
-1. 打开网页
-2. 点击「选择 GBA ROM 文件」
-3. 选择你自己的 `.gba` 或 `.zip` 文件
-4. 开始游戏！
+## 本机双人（最稳）
 
-### 默认键盘映射
+1. 模式选「本机双人」
+2. 加载支持通信缆的游戏（宝可梦、马里奥赛车等）
+3. 玩家1 用键盘默认键，玩家2 在 EmulatorJS 控制设置里映射第二套键或手柄
 
-| GBA 按键 | 键盘 |
-|---------|------|
-| 十字键   | 方向键 或 WASD |
-| A        | Z 或 A |
-| B        | X 或 S |
-| Start    | Enter |
-| Select   | Shift |
-| L        | Q |
-| R        | W |
+## 局域网双人
 
-手机上会自动显示虚拟按键。也可以连接物理手柄。
+1. 一台电脑：
+   ```bash
+   cd netplay-server
+   npm install
+   npm start
+   ```
+2. 两人手机/电脑连同一 Wi-Fi
+3. 打开模拟器网页 → 选「局域网联机」
+4. 服务器填 `http://主机IP:3000`
+5. 双方加载**同一 ROM** → 主机创建房间 → 客人加入
 
-## 技术说明
+> 官方 EmulatorJS stable 的 Netplay 仍在完善中，若图标不出现可换夜间版 CDN（页面里已做切换逻辑）。
 
-本项目使用 [EmulatorJS](https://emulatorjs.org)（基于 mGBA 核心），通过 CDN 加载，无需自己托管模拟器文件。
+## 免责
 
-所有 ROM 都在你的浏览器本地运行，不会上传到任何服务器。
-
-## 重要声明
-
-**请只使用你合法拥有的游戏 ROM。**  
-本仓库不包含、也不提供任何游戏 ROM 文件。
-
-## 部署到自己的 GitHub Pages
-
-1. Fork 本仓库 或 直接使用
-2. 进入仓库 Settings → Pages
-3. Source 选择 `Deploy from a branch`
-4. Branch 选择 `main`，文件夹选择 `/ (root)`
-5. 保存后等待几分钟即可访问
-
-## License
-
-本项目前端代码使用 MIT License。  
-EmulatorJS 和 mGBA 核心遵循其各自的开源协议。
+请只使用你合法拥有的 ROM。本项目不提供任何游戏文件。

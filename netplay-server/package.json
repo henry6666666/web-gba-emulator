@@ -1,0 +1,15 @@
+{
+  "name": "web-gba-netplay-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LAN signaling server for EmulatorJS netplay",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "socket.io": "^4.8.0"
+  }
+}
