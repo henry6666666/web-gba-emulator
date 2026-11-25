@@ -32,7 +32,6 @@
     .btn-secondary { background: rgba(255,255,255,0.15); color: #e0e0e0; box-shadow: none; }
     #romInput { display: none; }
     #display { width: 100%; max-width: 720px; height: 480px; max-height: 58vh; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: relative; outline: none; }
-    #display.dual { max-width: 960px; height: 520px; }
     #display:focus, #display:focus-within { box-shadow: 0 0 0 2px #00d9ff, 0 10px 40px rgba(0,0,0,0.5); }
     #game { width: 100%; height: 100%; }
     #kb-capture { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0.01; border: none; z-index: 5; color: transparent; background: transparent; }
@@ -41,7 +40,7 @@
     .status { margin-top: 10px; font-size: 0.85rem; color: #00d9ff; min-height: 1.2em; text-align: center; }
     footer { margin-top: 14px; font-size: 0.75rem; opacity: 0.7; text-align: center; max-width: 600px; }
     footer a { color: #00d9ff; text-decoration: none; }
-    @media (max-width: 768px) { h1 { font-size: 1.25rem; } #display, #display.dual { height: 340px; max-height: 48vh; } }
+    @media (max-width: 768px) { h1 { font-size: 1.25rem; } #display { height: 340px; max-height: 48vh; } }
   </style>
 </head>
 <body>
@@ -59,7 +58,7 @@
       <div class="netplay-fields" id="netplayFields">
         <input id="netplayUrl" type="text" placeholder="信令服务器 例如 http://192.168.1.8:3000" value="http://127.0.0.1:3000">
       </div>
-      <div class="hint">本机双人最稳（通信缆）。局域网需先在电脑运行 netplay-server。</div>
+      <div class="hint">本机双人 = 同一台设备两套键/两手柄。真正通信缆核心 CDN 已下架。</div>
       <div class="hint hint-ok">iPad 外接键盘：先点「启用外接键盘」，再点画面。</div>
     </div>
   </header>
@@ -98,7 +97,7 @@
     if (isIOS) enableKbBtn.style.display = 'inline-flex';
     const helpText = {
       single: '普通单机。Z=A，X=B，方向键移动，Enter=Start，V=Select，Q/E=L/R。',
-      dual: '本机双人：使用 mgbadual 核心，模拟两台 GBA 通信缆。适合宝可梦交换/对战等。P2 请在控制菜单绑定或接手柄。',
+      dual: '本机双人：同一模拟器内 P1+P2 两套键（或两只手柄）。P1=方向键+Z/X，P2=T/F/G/H+J/K。注意：多数 GBA 联机依赖通信缆，网页 CDN 已无 dual 核心，此模式适合「支持双人同机」的游戏。',
       netplay: '局域网联机：电脑运行 netplay-server，双方填同一服务器，加载同一 ROM。主机开房，客人加入。'
     };
     document.querySelectorAll('.mode-btn').forEach(function (btn) {
@@ -109,7 +108,6 @@
         playMode = btn.getAttribute('data-mode');
         modeHelp.textContent = helpText[playMode];
         netplayFields.classList.toggle('show', playMode === 'netplay');
-        display.classList.toggle('dual', playMode === 'dual');
       });
     });
     function setStatus(msg) { statusEl.textContent = msg || ''; }
@@ -143,17 +141,15 @@
       var gameUrl = URL.createObjectURL(blob);
       var gameName = file.name.replace(/\.(gba|zip|7z|rar)$/i, '');
       window.EJS_player = '#game';
+      window.EJS_core = 'gba';
       window.EJS_gameUrl = gameUrl;
       window.EJS_gameName = gameName;
       window.EJS_gameID = hashId(gameName.toLowerCase());
       window.EJS_startOnLoaded = true;
       window.EJS_color = '#00d9ff';
       window.EJS_askBeforeExit = false;
-      if (playMode === 'dual') {
-        window.EJS_core = 'mgbadual';
-        window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-      } else if (playMode === 'netplay') {
-        window.EJS_core = 'gba';
+
+      if (playMode === 'netplay') {
         window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
         var server = (netplayUrlInput.value || '').trim().replace(/\/$/, '');
         if (!server) {
@@ -168,9 +164,10 @@
           { urls: 'stun:stun1.l.google.com:19302' }
         ];
       } else {
-        window.EJS_core = 'gba';
+        // 单人 / 本机双人都用官方 CDN 存在的 gba(mgba) 核心
         window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
       }
+
       window.EJS_defaultControls = {
         0: {
           0: { value: 'x', value2: 'BUTTON_2' }, 1: { value: 's', value2: 'BUTTON_4' },
@@ -189,15 +186,19 @@
         },
         2: {}, 3: {}
       };
+
       window.EJS_ready = function () {
         if (playMode === 'netplay') setStatus('已加载。点模拟器工具栏地球图标创建/加入房间');
-        else if (playMode === 'dual') setStatus('本机双人已启动。P1: 方向键+ZX / P2: TFGH+JK');
+        else if (playMode === 'dual') setStatus('本机双人：P1 方向键+Z/X，P2 T/F/G/H+J/K（或接两只手柄）');
         else if (isIOS) setStatus('加载完成。iPad：启用外接键盘或使用虚拟手柄');
         else setStatus('加载完成！请点击游戏画面后再用键盘');
         setTimeout(focusKeyboardCapture, 400);
       };
       window.EJS_onGameStart = function () { setTimeout(focusKeyboardCapture, 200); };
-      var loaderBase = playMode === 'netplay' ? 'https://cdn.emulatorjs.org/latest/data/loader.js' : 'https://cdn.emulatorjs.org/stable/data/loader.js';
+
+      var loaderBase = playMode === 'netplay'
+        ? 'https://cdn.emulatorjs.org/latest/data/loader.js'
+        : 'https://cdn.emulatorjs.org/stable/data/loader.js';
       var script = document.createElement('script');
       script.src = loaderBase;
       script.onerror = function () {
